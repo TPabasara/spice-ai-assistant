@@ -1,23 +1,31 @@
 import json
+from functools import lru_cache
+from typing import Any, Dict
 from langgraph.graph import StateGraph, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.core.config import settings
 from app.ai.agents.state import AgentState
 from app.ai.agents.tools import product_search, policy_and_recipe_search
 
-# Initialize the Gemini model with native tool capabilities
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    google_api_key=settings.GEMINI_API_KEY,
-    temperature=0.2
-)
-
 # Bind our tools to the LLM instance
 tools = {
     "product_search": product_search,
     "policy_and_recipe_search": policy_and_recipe_search
 }
-llm_with_tools = llm.bind_tools(list(tools.values()))
+@lru_cache(maxsize=1)
+def get_llm():
+    if not settings.GOOGLE_API_KEY:
+        raise RuntimeError("Gemini is not configured. Set GOOGLE_API_KEY to enable chat.")
+    return ChatGoogleGenerativeAI(
+        model="gemini-3.8-flash",
+        api_key=settings.GOOGLE_API_KEY,
+        temperature=0.2,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_llm_with_tools():
+    return get_llm().bind_tools(list(tools.values()))
 
 def call_agent(state: AgentState) -> Dict[str, Any]:
     """
@@ -25,7 +33,7 @@ def call_agent(state: AgentState) -> Dict[str, Any]:
     """
     messages = state["messages"]
     # Formulate a clean payload for LangChain
-    response = llm_with_tools.invoke(messages)
+    response = get_llm_with_tools().invoke(messages)
     
     # If the LLM generated tool calls, route to the execution stage
     if response.tool_calls:
@@ -75,7 +83,7 @@ def generate_answer(state: AgentState) -> Dict[str, Any]:
         f"User Query: {original_query}"
     )
     
-    final_response = llm.invoke(system_prompt)
+    final_response = get_llm().invoke(system_prompt)
     return {
         "messages": [final_response],
         "next_step": "end"

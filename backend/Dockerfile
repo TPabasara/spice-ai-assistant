@@ -1,5 +1,5 @@
 # Stage 1: Runtime environment configuration
-FROM python:3.11-slim AS runtime
+FROM python:3.12.3-slim AS runtime
 
 WORKDIR /code
 

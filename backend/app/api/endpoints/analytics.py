@@ -38,6 +38,6 @@ def get_evaluation_analytics(
         ChatMessage.sender == "ai"
     ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
 
-    logs = [EvaluationLogEntry.from_orm(msg) for msg in recent_messages]
+    logs = [EvaluationLogEntry.model_validate(msg) for msg in recent_messages]
 
     return AnalyticsDashboardPayload(summary=summary_data, recent_logs=logs)

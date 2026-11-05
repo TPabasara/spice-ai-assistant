@@ -57,4 +57,11 @@ async def chat_interaction(payload: ChatRequest, db: Session = Depends(get_db)):
         }
     except Exception as e:
         db.rollback()
+        # --- NEW CODE START ---
+        import traceback
+        print("\n" + "="*50)
+        print("🚨 CRITICAL AGENT ERROR TRACEBACK 🚨")
+        traceback.print_exc()
+        print("="*50 + "\n")
+        # --- NEW CODE END ---
         raise HTTPException(status_code=500, detail=f"Agent Execution Failure: {str(e)}")

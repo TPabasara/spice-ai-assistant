@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import ThemeToggle from "./theme-toggle";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,10 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${inter.className} min-h-screen flex flex-col bg-slate-50 text-slate-900`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen flex flex-col bg-slate-50 text-slate-900`}>
         <nav className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
             <Link
@@ -28,7 +27,7 @@ export default function RootLayout({
             >
               SpiceCraft AI
             </Link>
-            <div className="flex gap-6 text-sm font-medium">
+            <div className="flex items-center gap-3 text-sm font-medium sm:gap-6">
               <Link
                 href="/products"
                 className="hover:text-orange-600 transition-colors"
@@ -47,6 +46,7 @@ export default function RootLayout({
               >
                 Admin
               </Link>
+              <ThemeToggle />
             </div>
           </div>
         </nav>

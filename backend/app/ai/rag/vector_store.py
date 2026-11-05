@@ -1,3 +1,4 @@
+import os
 import chromadb
 from typing import List, Dict, Any
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -7,11 +8,15 @@ class ChromaDBManager:
     """
     Manages vector embeddings and semantic search using ChromaDB and Google Embeddings.
     """
-    def __init__(self, persist_directory: str = "./data/chromadb"):
+    def __init__(self, persist_directory: str = None):
+        # Dynamically set path: Use environment variable in production (Render), fallback to WSL path locally
+        if persist_directory is None:
+            persist_directory = os.getenv("CHROMA_DB_PATH", "/home/tharindu/spice_chroma_db")
+
         # Initialize Google Embeddings
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001",
-            google_api_key=settings.GEMINI_API_KEY
+            model="models/embedding-004",
+            google_api_key=settings.GOOGLE_API_KEY
         )
         
         # Initialize persistent ChromaDB client

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { apiClient } from "@/lib/api";
 import {
   Shield,
@@ -34,8 +34,17 @@ export default function AdminDashboard() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
 
   const fetchDashboardData = async () => {
+    if (!localStorage.getItem("spice_access_token")) return;
     setLoading(true);
     try {
       // In a complete integration, attach token headers from storage here
@@ -44,14 +53,64 @@ export default function AdminDashboard() {
       setLogs(response.data.recent_logs);
     } catch (err) {
       console.error("Failed to collect systems telemetries", err);
+      setUploadStatus("Dashboard access failed. Sign in with an admin account.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    setIsAuthenticated(Boolean(localStorage.getItem("spice_access_token")));
+    setAuthReady(true);
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) fetchDashboardData();
+  }, [isAuthenticated]);
+
+  const handleAuth = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      if (authMode === "register") {
+        await apiClient.post("/auth/register", { email, password, full_name: fullName });
+      }
+      const response = await apiClient.post(
+        "/auth/login",
+        new URLSearchParams({ username: email, password }),
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+      );
+      localStorage.setItem("spice_access_token", response.data.access_token);
+      setIsAuthenticated(true);
+    } catch (error: unknown) {
+      const detail = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : undefined;
+      setAuthError(detail || "Could not authenticate. Check the API connection and your details.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  if (!authReady) return <div className="container mx-auto p-6">Loading…</div>;
+
+  if (!isAuthenticated) {
+    return (
+      <section className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+        <h1 className="text-3xl font-bold">Admin sign in</h1>
+        <p className="mt-2 text-slate-600">Sign in to view telemetry and manage knowledge documents.</p>
+        <form onSubmit={handleAuth} className="mt-6 space-y-4 rounded-xl border bg-white p-6">
+          {authMode === "register" && <label className="block text-sm">Full name<input required value={fullName} onChange={(event) => setFullName(event.target.value)} className="mt-1 w-full rounded border px-3 py-2" /></label>}
+          <label className="block text-sm">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded border px-3 py-2" /></label>
+          <label className="block text-sm">Password<input required type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded border px-3 py-2" /></label>
+          {authError && <p role="alert" className="text-sm text-red-700">{authError}</p>}
+          <button disabled={authBusy} className="w-full rounded bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">{authBusy ? "Please wait…" : authMode === "login" ? "Sign in" : "Create account"}</button>
+          <button type="button" onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAuthError(""); }} className="w-full text-sm text-orange-700">{authMode === "login" ? "Need an account? Register" : "Already registered? Sign in"}</button>
+        </form>
+      </section>
+    );
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -81,13 +140,12 @@ export default function AdminDashboard() {
             System Control & Telemetry
           </h1>
         </div>
-        <button
-          onClick={fetchDashboardData}
-          className="flex items-center gap-2 px-4 py-2 border rounded-md text-sm font-medium hover:bg-slate-50 transition"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={fetchDashboardData} className="flex items-center gap-2 px-4 py-2 border rounded-md text-sm font-medium hover:bg-slate-50 transition">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+          <button onClick={() => { localStorage.removeItem("spice_access_token"); setIsAuthenticated(false); setMetrics(null); setLogs([]); }} className="rounded-md border px-4 py-2 text-sm">Sign out</button>
+        </div>
       </div>
 
       {/* Analytics Summary Cards */}

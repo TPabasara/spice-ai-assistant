@@ -4,6 +4,8 @@ from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
 
+ALGORITHM = "HS256"
+
 # Configure bcrypt as our hashing algorithm
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,5 +30,5 @@ def create_access_token(subject: Union[str, Any], expires_delta: Optional[timede
     to_encode = {"exp": expire, "sub": str(subject)}
     
     # Sign the token using our secret key and the HS256 algorithm
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

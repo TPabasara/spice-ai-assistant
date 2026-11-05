@@ -3,10 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.endpoints import api_router
 
+from app.database.session import engine, Base 
+from app.database.models import user, chat, document, product
+
 def get_application() -> FastAPI:
     """
     Factory function to initialize the FastAPI application.
     """
+    Base.metadata.create_all(bind=engine)
+
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.VERSION,
