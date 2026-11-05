@@ -21,7 +21,7 @@ def get_application() -> FastAPI:
     # Set up CORS middleware to allow the frontend to communicate with the API
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://your-frontend.vercel.app"],
+        allow_origins=["https://spice-ai-assistant.vercel.app"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
