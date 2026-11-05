@@ -1,7 +1,8 @@
 import axios from "axios";
 
 // Default to localhost:8000 if the environment variable is missing
-const API_BASE_URL = process.env.NEXT_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  process.env.NEXT_API_URL || "https://spice-ai-assistant.onrender.com/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
