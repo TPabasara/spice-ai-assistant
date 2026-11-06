@@ -15,7 +15,7 @@ class ChromaDBManager:
 
         # Initialize Google Embeddings
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-004",
+            model="models/embedding-001",
             google_api_key=settings.GOOGLE_API_KEY
         )
         
