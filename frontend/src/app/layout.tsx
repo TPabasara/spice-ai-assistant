@@ -18,7 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen flex flex-col bg-slate-50 text-slate-900`}>
+      <body
+        className={`${inter.className} min-h-screen flex flex-col bg-slate-50 text-slate-900`}
+      >
         <nav className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
           <div className="container mx-auto flex h-16 items-center justify-between px-4">
             <Link
@@ -44,7 +46,7 @@ export default function RootLayout({
                 href="/admin"
                 className="hover:text-orange-600 transition-colors"
               >
-                Admin
+                Login
               </Link>
               <ThemeToggle />
             </div>
