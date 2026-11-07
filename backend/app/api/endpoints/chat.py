@@ -39,7 +39,21 @@ async def chat_interaction(payload: ChatRequest, db: Session = Depends(get_db)):
     
     try:
         final_output = agent_graph.invoke(initial_state)
-        ai_response_text = final_output["messages"][-1].content
+        
+        # 1. Safely extract the last message whether it's a dict or an object
+        last_message = final_output["messages"][-1]
+        if isinstance(last_message, dict):
+            raw_content = last_message.get("content", "")
+        else:
+            raw_content = getattr(last_message, "content", "")
+            
+        # 2. Normalize multimodal lists/dicts into a plain string for PostgreSQL
+        if isinstance(raw_content, list):
+            ai_response_text = raw_content[0].get("text", "") if len(raw_content) > 0 else ""
+        elif isinstance(raw_content, dict):
+            ai_response_text = raw_content.get("text", "")
+        else:
+            ai_response_text = str(raw_content)
         
         # Log response metrics to database
         ai_msg = ChatMessage(
@@ -57,11 +71,9 @@ async def chat_interaction(payload: ChatRequest, db: Session = Depends(get_db)):
         }
     except Exception as e:
         db.rollback()
-        # --- NEW CODE START ---
         import traceback
         print("\n" + "="*50)
         print("🚨 CRITICAL AGENT ERROR TRACEBACK 🚨")
         traceback.print_exc()
         print("="*50 + "\n")
-        # --- NEW CODE END ---
         raise HTTPException(status_code=500, detail=f"Agent Execution Failure: {str(e)}")
