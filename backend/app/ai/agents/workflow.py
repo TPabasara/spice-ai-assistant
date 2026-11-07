@@ -18,7 +18,7 @@ def get_llm():
     if not settings.GOOGLE_API_KEY:
         raise RuntimeError("Gemini is not configured. Set GOOGLE_API_KEY to enable chat.")
     return ChatGoogleGenerativeAI(
-        model="gemini-3.8-flash",
+        model="gemini-3.5-flash",
         api_key=settings.GOOGLE_API_KEY,
         temperature=0.2,
     )
