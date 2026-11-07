@@ -12,16 +12,16 @@ tools = {
     "product_search": product_search,
     "policy_and_recipe_search": policy_and_recipe_search
 }
+
 @lru_cache(maxsize=1)
 def get_llm():
     if not settings.GOOGLE_API_KEY:
         raise RuntimeError("Gemini is not configured. Set GOOGLE_API_KEY to enable chat.")
     return ChatGoogleGenerativeAI(
-        model="gemini-3.5-flash",
+        model="gemini-3.8-flash",
         api_key=settings.GOOGLE_API_KEY,
         temperature=0.2,
     )
-
 
 @lru_cache(maxsize=1)
 def get_llm_with_tools():
@@ -72,7 +72,16 @@ def generate_answer(state: AgentState) -> Dict[str, Any]:
     """
     Node: Injects retrieved tool context into a final grounded system prompt.
     """
-    original_query = state["messages"][0].content if state["messages"] else ""
+    # Safely extract the query whether the message is a dict or an object
+    if state["messages"]:
+        first_msg = state["messages"][0]
+        if isinstance(first_msg, dict):
+            original_query = first_msg.get("content", "")
+        else:
+            original_query = getattr(first_msg, "content", "")
+    else:
+        original_query = ""
+
     context_str = "\n\n".join(state.get("retrieved_context", []))
     
     system_prompt = (
