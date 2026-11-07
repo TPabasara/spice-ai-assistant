@@ -40,12 +40,16 @@ export default function LoginPage() {
         { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
       );
 
-      // Save token to local storage
-      localStorage.setItem("spice_access_token", response.data.access_token);
+      const token = response.data.access_token;
 
-      // Test admin privileges by attempting to fetch the dashboard
+      // Save token to local storage
+      localStorage.setItem("spice_access_token", token);
+
+      // Test admin privileges explicitly passing the new token
       try {
-        await apiClient.get("/analytics/dashboard");
+        await apiClient.get("/analytics/dashboard", {
+          headers: { Authorization: `Bearer ${token}` }, // <-- FORCE the new token here
+        });
         // If successful, this is the admin user
         router.push("/admin");
       } catch (adminError) {

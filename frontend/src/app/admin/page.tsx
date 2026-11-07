@@ -405,9 +405,10 @@ export default function AdminDashboard() {
       setLogs(response.data.recent_logs);
     } catch (err: any) {
       console.error("Failed to collect systems telemetries", err);
-      // If the backend returns 403 Forbidden or 401 Unauthorized, redirect normal users to home
       if (err.response?.status === 403 || err.response?.status === 401) {
-        router.push("/");
+        // FIX: Clear the invalid token so the user can log in again
+        localStorage.removeItem("spice_access_token");
+        router.push("/login"); // Send them to login, not home
       } else {
         setUploadStatus("Dashboard access failed. Server error.");
       }
