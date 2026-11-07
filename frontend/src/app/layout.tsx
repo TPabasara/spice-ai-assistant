@@ -43,7 +43,7 @@ export default function RootLayout({
                 AI Assistant
               </Link>
               <Link
-                href="/admin"
+                href="/login"
                 className="hover:text-orange-600 transition-colors"
               >
                 Login
